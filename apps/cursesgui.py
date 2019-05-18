@@ -377,7 +377,7 @@ class RxWindow(object):
         text = "Demod Type    : "
         self.win.addnstr(9, 1, text, 15)
         text = "Files         : "
-        self.win.addnstr(10, 1, text, 15)
+       # self.win.addnstr(10, 1, text, 15)
 
         # Draw the receiver info suffix fields
         if self.freq_entry <> 'None':
@@ -402,7 +402,7 @@ class RxWindow(object):
         text = str(self.type_demod)
         self.win.addnstr(9, 17, text, 8)
         text = str(self.lockout_file_name) + " " + str(self.priority_file_name)
-        self.win.addnstr(10, 17, text, 20)
+      #  self.win.addnstr(10, 17, text, 20)
 
         # Hide cursor
         self.win.leaveok(1)

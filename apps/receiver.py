@@ -14,11 +14,14 @@ from gnuradio import fft
 from gnuradio.fft import window
 from gnuradio import analog
 from gnuradio import audio
+import boto3
 import os
 import time
 import numpy as np
 from gnuradio.filter import pfb
 
+s3 = boto3.client('s3',region_name="eu-west-1")
+bucket_name = 'transcribe-wav-files'
 class BaseTuner(gr.hier_block2):
     """Some base methods that are the same between the known tuner types.
 
@@ -38,10 +41,17 @@ class BaseTuner(gr.hier_block2):
             rf_center_freq (float): RF center in Hz (for file name)
         """
         # Since the frequency (hence file name) changed, then close it
+
         self.blocks_wavfile_sink.close()
+        #fahri
 
         # If we never wrote any data to the wavfile sink, delete the file
         self._delete_wavfile_if_empty()
+        wav_file= self.file_name
+        if wav_file != "/dev/null" and os.path.isfile(wav_file):
+            if os.stat(wav_file).st_size >= 10000:
+                print "a"
+                #s3.upload_file(self.file_name, bucket_name, self.file_name)
 
         # Set the frequency
         self.freq_xlating_fir_filter_ccc.set_center_freq(center_freq)
@@ -57,8 +67,8 @@ class BaseTuner(gr.hier_block2):
             file_freq = (rf_center_freq + self.center_freq)/1E6
             file_freq = np.round(file_freq, 3)
             file_name = 'wav/' + '{:.3f}'.format(file_freq) + tstamp + ".wav"
-
             # Make sure the 'wav' directory exists
+
             try:
                 os.mkdir('wav')
             except OSError:  # will need to add something here for Win support
@@ -85,7 +95,6 @@ class BaseTuner(gr.hier_block2):
             squelch_db (float): Squelch in dB
         """
         self.analog_pwr_squelch_cc.set_threshold(squelch_db)
-
     def __del__(self):
         """Called when the object is destroyed."""
         # Make a best effort attempt to clean up our wavfile if it's empty
@@ -500,6 +509,7 @@ class Receiver(gr.top_block):
             # Just connect each demodulator to the receiver source
             for demodulator in self.demodulators:
                 self.connect(self.src, demodulator)
+        print("done ?")
 
     def set_center_freq(self, center_freq):
         """Sets RF center frequency of hardware
@@ -590,6 +600,7 @@ def main():
     record = False
     play = True
     audio_bps = 8
+
     receiver = Receiver(ask_samp_rate, num_demod, type_demod, hw_args,
                         freq_correction, record, play, audio_bps)
 
